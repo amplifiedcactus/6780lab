@@ -61,7 +61,7 @@ void SystemClock_Config(void);
   * @retval int
   */
 int main(void) {
-	//asdf
+	//fdsa
 	HAL_Init(); // Reset of all peripherals, init the Flash and Systick
 	SystemClock_Config(); //Configure the system clock
 	
