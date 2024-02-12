@@ -147,8 +147,15 @@ void SysTick_Handler(void)
 
 /* USER CODE BEGIN 1 */
 void EXTI0_1_IRQHandler(void) {
-  GPIOC->ODR ^= (1 << 8) | (1 << 8); //toggle 8 and 9
-	NVIC->ICPR[0U]	|= (1 << 0);
-	//NVIC_ClearPendingIRQ (EXTI0_1_IRQn);
+  GPIOC->ODR ^= (1 << 8) | (1 << 9); //toggle 8 and 9
+	volatile int i;
+	for (i = 0; i < 1500000; i++){} //count to 1.5 million
+	GPIOC->ODR ^= (1 << 8) | (1 << 9); //toggle 8 and 9
+	NVIC->ICPR[0U]	|= (1 << 0); //clear NVIC pending flag
+	EXTI->PR |= (1 << 0); //clear EXTI pending flag
+	
+//	GPIOC->ODR ^= (1 << 8) | (1 << 9); //toggle 8 and 9
+//	NVIC->ICPR[0U]	|= (1 << 0);
+//	EXTI->PR |= (1 << 0);
 }
 /* USER CODE END 1 */

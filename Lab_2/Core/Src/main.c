@@ -61,7 +61,7 @@ void SystemClock_Config(void);
   * @retval int
   */
 int main(void) {
-	//fdsa
+	
 	HAL_Init(); // Reset of all peripherals, init the Flash and Systick
 	SystemClock_Config(); //Configure the system clock
 	
@@ -94,9 +94,10 @@ int main(void) {
 	EXTI->RTSR |= (1 << 0); //enable rising edge trigger
 	SYSCFG->EXTICR[0] &= ~(0x0000000F); //route PA0 to EXTI0
 	
-	NVIC_EnableIRQ (EXTI0_1_IRQn);
-	NVIC_SetPriority (EXTI0_1_IRQn, 1);
 	
+	NVIC_EnableIRQ (EXTI0_1_IRQn); //enable NVIC interrupt
+	NVIC_SetPriority (EXTI0_1_IRQn, 3); //set EXTI0 interrupt priority to 3
+//	NVIC_SetPriority (SysTick_IRQn, 2); //set SysTick interrupt priority to 2
 	
 	//turn on LEDs
 	GPIOC->ODR |= (1 << 9);
@@ -104,38 +105,7 @@ int main(void) {
 		HAL_Delay(600); // Delay 200ms
 		GPIOC->ODR ^= (1 << 6); //flash 6
 	}
-	
-	//Blink red and blue LEDs
-	/*
-	while (1) {
-		HAL_Delay(200); // Delay 200ms
-		GPIOC->ODR ^= (1 << 7) | (1 << 6); //invert 6 and 7
-	}
-	*/
-	
-	/*
-	//Toggle red and blue LEDs on button press
-	uint32_t debouncer = 0;
-	while(1) {
-	debouncer = (debouncer << 1); // Always shift every loop iteration
-	if (GPIOA->IDR & (1 << 0)) { // If input signal is set/high
-	debouncer |= 0x01; // Set lowest bit of bit-vector
-	}
-	if (debouncer == 0xFFFFFFFF) {
-	// This code triggers repeatedly when button is steady high!
-	}
-	if (debouncer == 0x00000000) {
-	// This code triggers repeatedly when button is steady low!
-	}
-	if (debouncer == 0x7FFFFFFF) {
-	// This code triggers only once when transitioning to steady high!
-		GPIOC->ODR ^= (1 << 7) | (1 << 6); //invert 6 and 7
-	}
-	// When button is bouncing the bit-vector value is random since bits are set when
-	//the button is high and not when it bounces low.
-	HAL_Delay(2); // Delay 2ms
-	}
-	*/
+
 }
 
 /**
