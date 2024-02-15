@@ -98,6 +98,7 @@ int main(void) {
 	NVIC_EnableIRQ (EXTI0_1_IRQn); //enable NVIC interrupt
 	NVIC_SetPriority (EXTI0_1_IRQn, 3); //set EXTI0 interrupt priority to 3
   NVIC_SetPriority (SysTick_IRQn, 2); //set SysTick interrupt priority to 2
+	//NVIC->IP[EXTI0_1_IRQn] = 0x00;
 	
 	//turn on LEDs
 	GPIOC->ODR |= (1 << 9);

@@ -141,5 +141,11 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /* USER CODE BEGIN 1 */
-
+void TIM2_IRQHandler(void) {
+	
+	GPIOC->ODR ^= (1 << 8) | (1 << 9); //toggle 8 and 9
+	
+	NVIC->ICPR[0U]	|= (1 << 0); //clear NVIC pending flag
+	TIM2->SR &= ~(1 << 0); //clear update interrupt flag
+}
 /* USER CODE END 1 */

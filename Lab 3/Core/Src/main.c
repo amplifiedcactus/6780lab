@@ -62,40 +62,78 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
+	
+	
+	HAL_Init(); // Reset of all peripherals, init the Flash and Systick
+	SystemClock_Config(); //Configure the system clock
+	
+	RCC->AHBENR |= RCC_AHBENR_GPIOCEN; // Enable peripheral clock to GPIOC
 
-  /* USER CODE END 1 */
+	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN; //Enable peripheral clock to Timer 2
+	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN; //Enable peripheral clock to Timer 3
+	
+	
+	
+	
+	TIM2->PSC = 7999; //Set PSC to 7999 to Set frequency to 4Hz 
+	TIM2->ARR = 250; //Set auto-reload register to 250 to set frequency to 4Hz
+	TIM2->DIER |= (1 << 0); //Enable Update interrupt
+	TIM2->CR1 |= (1 << 0); //Set CEN bit to enable counter
+	
+	TIM3->PSC = 99; //Set PSC to Set frequency to 800Hz 
+	TIM3->ARR = 100; //Set auto-reload register to set frequency to 800Hz
+	
+	//Clear CC1S and CC2S bits to configure channels as outputs
+	TIM3->CCMR1 &= ~((1 << 0) | (1 << 1) | (1 << 8) | (1 << 9));
+	//Set OC2M (PC7, blue) to PWM mode 1 and OC1M (PC6, red) to PWM mode 2
+	TIM3->CCMR1 |= (1 << 14) | (1 << 13) | (0 << 12) | (1 << 6) | (1 << 5) | (1 << 4);
+	TIM3->CCMR1 &= ~(1 << 12);
+	//Set OC1PE and OC2PE to enable output compare preload
+	TIM3->CCMR1 |= (1 << 3) | (1 << 11);
+	//Set output enable bits for channel 1 and 2
+	TIM3->CCER |= (1 << 0) |  (1 << 4);
+	//Set capture/compare registers to .2 of ARR value for both channels
+	TIM3->CCR1 = 20;
+	TIM3->CCR2 = 20;
+	
+	
+	NVIC_EnableIRQ (TIM2_IRQn); //enable NVIC interrupt
+	NVIC_SetPriority (TIM2_IRQn, 3); //set EXTI0 interrupt priority to 3
+	
+	
+	
+	
+	
+	// Initialize pins PC6 (red), PC7 (blue), PC8 (orange), PC9 (green)
+	// Set 8 and 9 to general purpose output mode
+	GPIOC->MODER |= (1 << 18) | (1 << 16);
+	GPIOC->MODER &= ~((1 << 19) |(1 << 17));
+	// Set 7 and 6 to alternate function mode
+	GPIOC->MODER |= (1 << 15) | (1 << 13);
+	GPIOC->MODER &= ~((1 << 14) | (1 << 12));
+	// Set to push pull output type
+	GPIOC->OTYPER &= ~(0x000FF000); //0000 0000 0000 1111 1111 0000 0000 0000
+	// Set to low speed
+	GPIOC->OSPEEDR &= ~(0x000FF000);
+	// Set to no pullup/down resistor
+	GPIOC->PUPDR &= ~(0x000FF000);
+	
+	
+	
+	//Select AF0 for PC6 and PC7
+	GPIOC->AFR[0] |= 0x00 << GPIO_AFRL_AFRL6_Pos;
+	GPIOC->AFR[0] |= 0x00 << GPIO_AFRL_AFRL7_Pos;
+	
+	TIM3->CR1 |= (1 << 0); //Set CEN bit to enable counter
+	
+	//turn on LEDs
+	GPIOC->ODR |= (1 << 9);
+	GPIOC->ODR &= ~(1 << 8);
+	
+	while (1) {
+		
+	}
 
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
-
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
-  SystemClock_Config();
-
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
-  /* USER CODE BEGIN 2 */
-
-  /* USER CODE END 2 */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
-  }
-  /* USER CODE END 3 */
 }
 
 /**
