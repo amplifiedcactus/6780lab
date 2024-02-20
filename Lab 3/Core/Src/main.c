@@ -93,8 +93,8 @@ int main(void)
 	//Set output enable bits for channel 1 and 2
 	TIM3->CCER |= (1 << 0) |  (1 << 4);
 	//Set capture/compare registers to .2 of ARR value for both channels
-	TIM3->CCR1 = 20;
-	TIM3->CCR2 = 20;
+	TIM3->CCR1 = 1;
+	TIM3->CCR2 = 1;
 	
 	
 	NVIC_EnableIRQ (TIM2_IRQn); //enable NVIC interrupt
