@@ -142,6 +142,19 @@ void transmit16bits(int x, int y) {
 	sctransmit('\n');
 }
 
+void transmit16bits2(int x) {
+	setupUART3();
+	sctransmit('\r');
+	for (int i = 15; i >= 0; i = i - 1){
+		int t = 0;
+		if (x & (1 << i))
+			t = 1;
+		inttransmit(t);
+	}
+	sctransmit('\r');
+	sctransmit('\n');
+}
+
 //This function takes in an array of characters and transmits it from USART3_TX
 void string_transmit (char a[]) {
 	sctransmit('\r');
@@ -420,7 +433,7 @@ void initializeGyro(void) {
 
 
 
-void readGyro(void) {
+int readGyroX(void) {
 	//	Set the transaction parameters in the CR2 register. (See section 5.5.3)
 
 	//Set the L3GD20 slave address SADD[7:1] = 0x69 = 00 110 1001 0
@@ -488,7 +501,7 @@ void readGyro(void) {
 	
 	//string_transmit("read 1");
 	int r1 = I2C2->RXDR;
-	transmit8bits(r1);
+	//transmit8bits(r1);
 	
 	//Wait until either of the RXNE (Receive Register Not Empty) or NACKF (Slave Not-Acknowledge) flags are set.
 	while(1) {
@@ -506,7 +519,7 @@ void readGyro(void) {
 	
 	//string_transmit("read 2");
 	int r2 = I2C2->RXDR;
-	transmit8bits(r2);
+	//transmit8bits(r2);
 	
 	//Wait until the TC (Transfer Complete) flag is set.
 	while(1) {
@@ -515,14 +528,127 @@ void readGyro(void) {
 		HAL_Delay(10);
 	}
 
-	transmit16bits(r2, r1);
+	//transmit16bits(r2, r1);
 	
 	
 	//Set the STOP bit in the CR2 register to release the I2C bus.
 	I2C2->CR2 |= (1 << 14);
-	
+	int out = (r2 << 8) | r1;
+	return out;
 	
 }
+
+
+
+
+
+
+int readGyroY(void) {
+	//	Set the transaction parameters in the CR2 register. (See section 5.5.3)
+
+	//Set the L3GD20 slave address SADD[7:1] = 0x69 = 00 110 1001 0
+	I2C2->CR2 |= (1 << 7) | (1 << 6) | (1 << 4) | (1 << 1);
+
+	// Set the number of bytes to transmit = 1
+	I2C2->CR2 |= (1 << 16);
+	I2C2->CR2 &= ~(1 << 17);
+
+	// Set the RD_WRN bit to indicate a write operation.
+	I2C2->CR2 &= ~(1 << 10);
+	
+	// Set the START bit
+	I2C2->CR2 |= (1 << 13);
+
+
+	//Wait until either of the TXIS (Transmit Register Empty/Ready) or NACKF (Slave Not-Acknowledge) flags are set.
+	while(1) {
+		//If NACKF flag is set, light up blue LED and halt program
+		if (I2C2->ISR & (1 << 4)){
+			GPIOC->ODR |= (1 << 7); //Turn on blue LED
+			while (1) {}
+		}
+		//If TXIS flag is set, continue
+		if (I2C2->ISR & (1 << 1)){
+			break;
+		} 
+		HAL_Delay(1); // Delay 10ms
+	}
+	
+	
+
+	//Write the address of the “WHO_AM_I” register into the I2C transmit register (0x0F). (TXDR)
+	I2C2->TXDR = (0xAA << 0);
+	
+	
+	//Wait until the TC (Transfer Complete) flag is set.
+	while(1) {
+		if (I2C2->ISR & (1 << 6))
+			break;
+		HAL_Delay(1);
+	}
+	
+	
+	//Reload the CR2 register with the same parameters as before, but set the RD_WRN bit to indicate a read operation.
+	I2C2->CR2 |= (1 << 7) | (1 << 6) | (1 << 4) | (1 << 1); //Set the L3GD20 slave address SADD[7:1] = 0x69 = 00 110 1001 0
+	I2C2->CR2 &= ~(1 << 16); // Set the number of bytes to read = 2
+	I2C2->CR2 |= (1 << 17); // Set the number of bytes to read = 2
+	I2C2->CR2 |= (1 << 10); // Set the RD_WRN bit to indicate a read operation.
+	I2C2->CR2 |= (1 << 13); // Set the START bit
+	
+	//Wait until either of the RXNE (Receive Register Not Empty) or NACKF (Slave Not-Acknowledge) flags are set.
+	while(1) {
+		//If NACKF flag is set, light up orange LED and halt program
+		if (I2C2->ISR & (1 << 4)){
+			GPIOC->ODR |= (1 << 8); //Turn on orange LED
+			while (1) {}
+		}
+		//If RXNE flag is set, continue
+		if (I2C2->ISR & (1 << 2)){
+			break;
+		} 
+		HAL_Delay(1); // Delay 10ms
+	}
+	
+	//string_transmit("read 1");
+	int r1 = I2C2->RXDR;
+	//transmit8bits(r1);
+	
+	//Wait until either of the RXNE (Receive Register Not Empty) or NACKF (Slave Not-Acknowledge) flags are set.
+	while(1) {
+		//If NACKF flag is set, light up orange LED and halt program
+		if (I2C2->ISR & (1 << 4)){
+			GPIOC->ODR |= (1 << 8); //Turn on orange LED
+			while (1) {}
+		}
+		//If RXNE flag is set, continue
+		if (I2C2->ISR & (1 << 2)){
+			break;
+		} 
+		HAL_Delay(10); // Delay 10ms
+	}
+	
+	//string_transmit("read 2");
+	int r2 = I2C2->RXDR;
+	//transmit8bits(r2);
+	
+	//Wait until the TC (Transfer Complete) flag is set.
+	while(1) {
+		if (I2C2->ISR & (1 << 6))
+			break;
+		HAL_Delay(10);
+	}
+
+	//transmit16bits(r2, r1);
+	
+	
+	//Set the STOP bit in the CR2 register to release the I2C bus.
+	I2C2->CR2 |= (1 << 14);
+	int out = (r2 << 8) | r1;
+	return out;
+	
+}
+
+
 
 /* USER CODE END 0 */
 
@@ -557,23 +683,57 @@ int main(void)
 	initializeGyro(); //initialize gyroscope
 	string_transmit("Gyroscope initialization complete");
 
+	GPIOC->ODR &= ~(1 << 6); //Turn off red LED
 	
 	
 
 	
-	int count = 0;
+//	int count = 0;
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
   while (1)
   {
-		readGyro();
-    
+		string_transmit("while loop start");
+//		string_transmit("gyro:");
+//    transmit16bits2(readGyroX());
+//		transmit16bits2(readGyroY());
+		int readX = readGyroX();
+		string_transmit("readX");
+		int readY = readGyroY();
+		string_transmit("readY");
+		
+		
+		
+		
 
+		if (readY > (0xFFFF/2)){
+			GPIOC->ODR |= (1 << 7); //Turn on blue LED
+			GPIOC->ODR &= ~(1 << 6); //Turn off red LED
+		}
+		else {
+			GPIOC->ODR &= ~(1 << 7); //Turn off blue LED
+			GPIOC->ODR |= (1 << 6); //Turn on red LED
+		}
+
+		if (readX > (0xFFFF/2)){
+			GPIOC->ODR &= ~(1 << 9); //Turn off green LED
+			GPIOC->ODR |= (1 << 8); //Turn on orange LED
+		}
+		else {
+			GPIOC->ODR |= (1 << 9); //Turn on green LED
+			GPIOC->ODR &= ~(1 << 8); //Turn off orange LED
+		}
+		
+		
+
+		
+		
 		HAL_Delay(100); // Delay 500ms
-
-    count = count + 1;
-		if (count > 14)
-			break;
+		string_transmit("while loop complete");
+//    count = count + 1;
+//		if (count > 14)
+//			break;
   }
 	string_transmit("while loop complete");
   
